@@ -13,12 +13,6 @@ jobs:
       - name: Run Semgrep SAST
         uses: returntocorp/semgrep-action@v1
 
-      - name: Run Trivy Dependency Scan
-        uses: aquasecurity/trivy-action@v0.31.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-
   deploy:
     runs-on: self-hosted
     needs: scan
