@@ -1,23 +1,45 @@
-name: Deploy nginx to k3d
+name: Secure CI/CD Pipeline
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
+  scan:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
 
+      - name: Run Semgrep SAST
+        uses: returntocorp/semgrep-action@v1
+
+      - name: Run Trivy Dependency Scan
+        uses: aquasecurity/trivy-action@v0.16.2
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+
+  deploy:
+    runs-on: self-hosted
+    needs: scan
+    steps:
+      - uses: actions/checkout@v3
       - name: Set KUBECONFIG
         run: echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
-
       - name: Deploy to k3d cluster
         run: kubectl apply -f nginx-deployment.yaml
-
       - name: Deploy nginx service
         run: kubectl apply -f nginx-service.yaml
-
       - name: Print access URL
-        run: echo "You can now reach the nginx page at http://localhost:8080/"
+        run: |
+          echo "You can now reach the nginx page at:"
+          echo "http://localhost:8080/"
+
+  dast:
+    runs-on: self-hosted
+    needs: deploy
+    steps:
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:8080'
