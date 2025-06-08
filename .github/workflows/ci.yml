@@ -18,12 +18,22 @@ jobs:
     needs: scan
     steps:
       - uses: actions/checkout@v3
+
+      - name: Create k3d Cluster
+        uses: AbsaOSS/k3d-action@v2
+        with:
+          cluster-name: "ci-cluster"
+          args: -p "8080:30080@server:0"
+
       - name: Set KUBECONFIG
         run: echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+
       - name: Deploy to k3d cluster
         run: kubectl apply -f nginx-deployment.yaml
+
       - name: Deploy nginx service
         run: kubectl apply -f nginx-service.yaml
+
       - name: Print access URL
         run: |
           echo "You can now reach the nginx page at:"
