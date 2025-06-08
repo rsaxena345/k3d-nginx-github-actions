@@ -20,4 +20,4 @@ jobs:
         run: kubectl apply -f nginx-service.yaml
 
       - name: Print access URL
-        run: echo "You can now reach the nginx page at [http://localhost:8080/](http://localhost:8080/)"
+        run: echo "You can now reach the nginx page at http://localhost:8080/"
