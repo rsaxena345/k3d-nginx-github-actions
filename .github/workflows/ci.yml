@@ -34,6 +34,19 @@ jobs:
       - name: Deploy nginx service
         run: kubectl apply -f nginx-service.yaml
 
+      - name: Wait for nginx
+        run: |
+          for i in {1..30}; do
+            if curl -sSf http://localhost:8080 > /dev/null; then
+              echo "nginx is up!"
+              exit 0
+            fi
+            echo "Waiting for nginx..."
+            sleep 5
+          done
+          echo "nginx did not become ready in time" >&2
+          exit 1
+
       - name: Print access URL
         run: |
           echo "You can now reach the nginx page at:"
