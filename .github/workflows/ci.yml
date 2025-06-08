@@ -15,3 +15,9 @@ jobs:
 
       - name: Deploy to k3d cluster
         run: kubectl apply -f nginx-deployment.yaml
+
+      - name: Deploy nginx service
+        run: kubectl apply -f nginx-service.yaml
+
+      - name: Print access URL
+        run: echo "You can now reach the nginx page at http://localhost:8080/"
