@@ -54,11 +54,11 @@ jobs:
       - name: Ensure Java is installed
         run: sudo apt-get update && sudo apt-get install -y openjdk-17-jre
 
-      - name: Download and Extract ZAP (Cross Platform)
+      - name: Download and Extract ZAP (Linux)
         run: |
-          wget https://github.com/zaproxy/zaproxy/releases/download/v2.15.0/ZAP_2_15_0_Crossplatform.tar.gz
+          wget https://github.com/zaproxy/zaproxy/releases/download/v2.15.0/ZAP_2_15_0_Linux.tar.gz
           mkdir -p $HOME/zap
-          tar -xzf ZAP_2_15_0_Crossplatform.tar.gz -C $HOME/zap --strip-components=1
+          tar -xzf ZAP_2_15_0_Linux.tar.gz -C $HOME/zap --strip-components=1
 
       - name: Run ZAP Baseline Scan
         run: |
