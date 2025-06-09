@@ -12,7 +12,7 @@ jobs:
       - name: Run Semgrep SAST
         uses: returntocorp/semgrep-action@v1
 
-  deploy-and-test:
+  deploy-and-DAST:
     runs-on: ubuntu-latest
     needs: scan
     steps:
@@ -56,6 +56,11 @@ jobs:
             kubectl logs deployment/nginx
             exit 1
           fi
+          
+      - name: Display nginx access information
+        run: |
+          echo "Deployment successful!"
+          echo "You can now reach the nginx page at http://localhost:8080/"
 
       # DAST Phase (in the same job)
       - name: Ensure Java is installed
