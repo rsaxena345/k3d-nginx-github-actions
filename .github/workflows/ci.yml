@@ -6,28 +6,34 @@ on:
 
 jobs:
   scan:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     steps:
       - uses: actions/checkout@v3
+
       - name: Run Semgrep SAST
         uses: returntocorp/semgrep-action@v1
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     needs: scan
     steps:
       - uses: actions/checkout@v3
+
       - name: Create k3d Cluster
         uses: AbsaOSS/k3d-action@v2
         with:
           cluster-name: "ci-cluster"
           args: -p "8080:30080@server:0"
+
       - name: Set KUBECONFIG
         run: echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+
       - name: Deploy to k3d cluster
         run: kubectl apply -f nginx-deployment.yaml
+
       - name: Deploy nginx service
         run: kubectl apply -f nginx-service.yaml
+
       - name: Wait for nginx
         run: |
           for i in {1..30}; do
@@ -42,19 +48,28 @@ jobs:
           exit 1
 
   dast:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     needs: deploy
     steps:
       - name: Ensure Java is installed
-        run: sudo apt-get update && sudo apt-get install -y openjdk-17-jre
+        run: |
+          if ! java -version &>/dev/null; then
+            brew install openjdk@17
+            sudo ln -sfn /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk
+            echo 'export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"' >> ~/.zshrc
+            source ~/.zshrc
+          fi
+
       - name: Download and Extract ZAP
         run: |
-          wget https://github.com/zaproxy/zaproxy/releases/download/v2.15.0/ZAP_2_15_0_unix.sh
-          chmod +x ZAP_2_15_0_unix.sh
-          ./ZAP_2_15_0_unix.sh -q -dir $HOME/zap
+          curl -L -o zap.tgz https://github.com/zaproxy/zaproxy/releases/download/v2.15.0/ZAP_2_15_0_Crossplatform.tar.gz
+          mkdir -p $HOME/zap
+          tar -xzf zap.tgz -C $HOME/zap --strip-components=1
+
       - name: Run ZAP Baseline Scan
         run: |
           $HOME/zap/zap.sh -cmd -quickurl http://localhost:8080 -quickout zap_report.html
+
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
