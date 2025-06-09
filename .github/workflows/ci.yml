@@ -54,11 +54,15 @@ jobs:
       - name: Ensure Java is installed
         run: sudo apt-get update && sudo apt-get install -y openjdk-17-jre
 
-      - name: Download and Extract ZAP (Linux)
+      - name: Download and Extract Latest ZAP (Linux)
         run: |
-          wget https://github.com/zaproxy/zaproxy/releases/download/v2.15.0/ZAP_2_15_0_Linux.tar.gz
+          curl -s https://api.github.com/repos/zaproxy/zaproxy/releases/latest \
+            | grep "browser_download_url.*Linux.tar.gz" \
+            | cut -d '"' -f 4 \
+            | wget -i -
+          LINUX_TARBALL=$(ls ZAP_*_Linux.tar.gz)
           mkdir -p $HOME/zap
-          tar -xzf ZAP_2_15_0_Linux.tar.gz -C $HOME/zap --strip-components=1
+          tar -xzf "$LINUX_TARBALL" -C $HOME/zap --strip-components=1
 
       - name: Run ZAP Baseline Scan
         run: |
